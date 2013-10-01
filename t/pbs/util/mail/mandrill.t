@@ -53,4 +53,48 @@ subtest 'parse_webhook_payload' => sub {
 };
 
 
+subtest 'big payload example' => sub {
+  my $payload = do {
+    my $file = 't/pbs/util/mail/data/test.json';
+    local $/;
+    open(my $fh, '<', $file) or die "FATAL: could not open file '$file',";
+    <$fh>;
+  };
+
+  my %meta;
+  my $cb = sub {
+    my ($type, $msg, $ts) = @_;
+    $meta{total}++;
+    $meta{msg_type}{$type}++;
+
+    return unless $type eq 'hard_bounce' or $type eq 'soft_bounce';
+    $meta{msg_key}{$_}{$type}{ (defined($msg->{$_}) ? $msg->{$_} : '<undef>') }++ for qw( bounce_description );
+  };
+
+  $m->parse_webhook_payload($payload, $cb);
+  cmp_deeply(
+    \%meta,
+    { msg_key => {
+        bounce_description => {
+          hard_bounce => { bad_mailbox => 111 },
+          soft_bounce => {
+            general        => 24,
+            invalid_domain => 10,
+            mailbox_full   => 3
+          }
+        }
+      },
+      total    => 760,
+      msg_type => {
+        hard_bounce => 111,
+        send        => 609,
+        reject      => 3,
+        soft_bounce => 37
+      }
+    },
+    'expected data from parsing all the messages'
+  );
+};
+
+
 done_testing();
