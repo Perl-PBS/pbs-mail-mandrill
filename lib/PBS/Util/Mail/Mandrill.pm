@@ -14,13 +14,11 @@ method parse_webhook_payload ($json, $cb) {
 
   if ($cb) {
     for my $i (@$data) {
-      my $ev = delete $i->{event};
-      my $ms = delete $i->{msg};
-      my $ts = delete $i->{ts};
+      my $ev = $i->{event};
+      my $ms = $i->{msg};
+      my $ts = $i->{ts};
 
-      Carp::confess("[FATAL]: unrecognized keys in event hash - " . join(', ', map {"'$_'"} sort keys %$i)) if %$i;
-
-      $cb->($ev, $ms, $ts);
+      $cb->($ev, $ms, $ts, $i);
     }
   }
 
