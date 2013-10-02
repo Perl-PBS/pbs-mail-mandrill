@@ -4,7 +4,7 @@ package PBS::Util::Mail::Mandrill;
 
 use PBS::Setup::Moo;
 use JSON::XS ();
-use Carp ();
+use Carp     ();
 
 ################
 # WebHook parser
